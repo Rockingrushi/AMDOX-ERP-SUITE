@@ -1,0 +1,142 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "library"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  email     String   @unique
+  password  String
+  role      String   @default("admin")
+  createdAt DateTime @default(now())
+
+  employees          Employee[]
+  products           Product[]
+  incomes            Income[]
+  expenses           Expense[]
+  attendanceRecords  Attendance[] @relation("UserAttendance")
+  createdAttendance  Attendance[] @relation("AttendanceCreatedBy")
+  updatedAttendance  Attendance[] @relation("AttendanceUpdatedBy")
+  leaveRequests      Leave[]      @relation("UserLeaves")
+  approvedLeaves     Leave[]      @relation("LeavesApprovedBy")
+  auditLogs          AuditLog[]
+}
+
+model Employee {
+  id          String   @id @default(uuid())
+  name        String
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  email       String
+  phone       String
+  department  String
+  designation String
+  salary      Float
+  joiningDate DateTime
+  createdAt   DateTime @default(now())
+
+  attendance Attendance[]
+  leaves     Leave[]
+}
+
+model Attendance {
+  id           String   @id @default(uuid())
+  userId       String
+  user         User     @relation("UserAttendance", fields: [userId], references: [id])
+  employeeId   String
+  employee     Employee @relation(fields: [employeeId], references: [id])
+  employeeName String
+  department   String
+  designation  String
+  date         DateTime
+  status       String   // "Present", "Absent", "Late", "Half Day", "Work From Home", "Holiday"
+  checkIn      String?
+  checkOut     String?
+  workingHours Float    @default(0)
+  overtimeHours Float    @default(0)
+  remarks      String?
+  createdBy    String?
+  creator      User?    @relation("AttendanceCreatedBy", fields: [createdBy], references: [id])
+  updatedBy    String?
+  updater      User?    @relation("AttendanceUpdatedBy", fields: [updatedBy], references: [id])
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([userId, employeeId, date])
+}
+
+model Leave {
+  id              String    @id @default(uuid())
+  userId          String
+  user            User      @relation("UserLeaves", fields: [userId], references: [id])
+  employeeId      String
+  employee        Employee  @relation(fields: [employeeId], references: [id])
+  employeeName    String
+  department      String
+  leaveType       String    // "Casual", "Sick", "Paid", "Unpaid", "Maternity", "Paternity"
+  startDate       DateTime
+  endDate         DateTime
+  totalDays       Float
+  reason          String
+  status          String    @default("Pending") // "Pending", "Approved", "Rejected"
+  approvedBy      String?
+  approver        User?     @relation("LeavesApprovedBy", fields: [approvedBy], references: [id])
+  approvedDate    DateTime?
+  rejectionReason String?
+  attachments     String    @default("")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+}
+
+model Product {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  productName String
+  category    String
+  price       Float
+  quantity    Int
+  supplier    String
+  createdAt   DateTime @default(now())
+}
+
+model Income {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  amount    Float
+  category  String
+  date      DateTime
+  createdAt DateTime @default(now())
+}
+
+model Expense {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  title     String
+  amount    Float
+  category  String
+  date      DateTime
+  createdAt DateTime @default(now())
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  action    String
+  entity    String
+  entityId  String?
+  details   String?
+  timestamp DateTime @default(now())
+}

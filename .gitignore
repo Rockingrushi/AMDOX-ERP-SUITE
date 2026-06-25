@@ -1,0 +1,22 @@
+# Legacy application folders
+backend-old/
+frontend-old/
+
+# Active log files
+nestjs.log
+next.log
+uvicorn.log
+
+# Node dependencies and build folders
+**/node_modules/
+**/.next/
+**/dist/
+
+# Python virtual environment
+**/__pycache__/
+**/.venv/
+**/uvicorn.log
+
+# SQLite Database files
+**/dev.db
+**/dev.db-journal

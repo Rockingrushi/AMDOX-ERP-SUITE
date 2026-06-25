@@ -1,0 +1,112 @@
+version: '3.8'
+
+services:
+  # Relational Database (PostgreSQL 17)
+  db:
+    image: postgres:17-alpine
+    container_name: amx_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: johndoe
+      POSTGRES_PASSWORD: randompassword
+      POSTGRES_DB: mydb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  # Time-Series Database extension (TimescaleDB)
+  timescaledb:
+    image: timescale/timescaledb:latest-pg16
+    container_name: amx_timescaledb
+    restart: always
+    environment:
+      POSTGRES_USER: tele_user
+      POSTGRES_PASSWORD: tele_password
+      POSTGRES_DB: tele_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - timescaledb_data:/var/lib/postgresql/data
+
+  # In-Memory Cache & Session (Redis 8)
+  redis:
+    image: redis:8.0-marlins-alpine
+    container_name: amx_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  # Text Search & Catalog (Elasticsearch 8.15.0)
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
+    container_name: amx_elasticsearch
+    restart: always
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ports:
+      - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+
+  # AI / ML Microservice (FastAPI)
+  ml-service:
+    build:
+      context: ../ml-service
+      dockerfile: Dockerfile
+    container_name: amx_ml_service
+    restart: always
+    ports:
+      - "8000:8000"
+    depends_on:
+      - redis
+
+  # API Gateway & Core Backend (NestJS)
+  backend:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: amx_backend
+    restart: always
+    environment:
+      DATABASE_URL: "postgresql://johndoe:randompassword@db:5432/mydb?schema=public"
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      ML_SERVICE_URL: "http://ml-service:8000"
+      ELASTICSEARCH_NODE: "http://elasticsearch:9200"
+      JWT_SECRET: "amx_erp_jwt_secret_key_2026"
+    ports:
+      - "5000:5000"
+    depends_on:
+      - db
+      - redis
+      - elasticsearch
+      - ml-service
+
+  # Frontend Web Client (Next.js 15)
+  frontend:
+    build:
+      context: ../frontend
+      dockerfile: Dockerfile
+    container_name: amx_frontend
+    restart: always
+    environment:
+      NEXT_PUBLIC_API_URL: "http://localhost:5000/api"
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:
+    driver: local
+  timescaledb_data:
+    driver: local
+  redis_data:
+    driver: local
+  elasticsearch_data:
+    driver: local
