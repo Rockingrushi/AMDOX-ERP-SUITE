@@ -10,6 +10,8 @@ services:
     envVars:
       - key: PYTHONUNBUFFERED
         value: "1"
+      - key: PYTHON_VERSION
+        value: "3.11.9"
 
   # 2. NestJS Backend Gateway
   - type: web
@@ -17,8 +19,8 @@ services:
     env: node
     plan: free
     rootDir: backend
-    buildCommand: npm install && npx prisma generate && npx prisma db push --accept-data-loss && npx prisma db seed && npm run build
-    startCommand: node dist/src/main.js
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npx prisma db push --accept-data-loss && npx prisma db seed && node dist/src/main.js
     envVars:
       - key: PRISMA_CLIENT_ENGINE_TYPE
         value: library
@@ -29,6 +31,8 @@ services:
           name: amdox-ml-service
           type: web
           property: url
+      - key: NODE_VERSION
+        value: "20.12.2"
 
   # 3. Next.js Frontend
   - type: web
@@ -44,3 +48,5 @@ services:
           name: amdox-backend
           type: web
           property: url
+      - key: NODE_VERSION
+        value: "20.12.2"
