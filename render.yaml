@@ -1,0 +1,46 @@
+services:
+  # 1. AI/ML FastAPI Microservice
+  - type: web
+    name: amdox-ml-service
+    env: python
+    plan: free
+    rootDir: ml-service
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PYTHONUNBUFFERED
+        value: "1"
+
+  # 2. NestJS Backend Gateway
+  - type: web
+    name: amdox-backend
+    env: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: node dist/src/main.js
+    envVars:
+      - key: PRISMA_CLIENT_ENGINE_TYPE
+        value: library
+      - key: DATABASE_URL
+        value: file:./dev.db
+      - key: ML_SERVICE_URL
+        fromService:
+          name: amdox-ml-service
+          type: web
+          property: host
+
+  # 3. Next.js Frontend
+  - type: web
+    name: amdox-frontend
+    env: node
+    plan: free
+    rootDir: frontend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        fromService:
+          name: amdox-backend
+          type: web
+          property: host
