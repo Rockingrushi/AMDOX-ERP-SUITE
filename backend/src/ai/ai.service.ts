@@ -4,7 +4,11 @@ import { PrismaService } from '../prisma/prisma.service';
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private readonly mlServiceUrl = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+  private readonly mlServiceUrl = (() => {
+    const raw = process.env.ML_SERVICE_URL || 'http://localhost:8000';
+    return raw.startsWith('http') ? raw : `https://${raw}`;
+  })();
+
 
   constructor(private prisma: PrismaService) {}
 
