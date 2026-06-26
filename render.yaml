@@ -19,11 +19,9 @@ services:
     env: node
     plan: free
     rootDir: backend
-    buildCommand: npm install && npx prisma generate && npm run build
-    startCommand: npx prisma db push --accept-data-loss && npx prisma db seed && node dist/src/main.js
+    buildCommand: npm install && npx prisma generate && npm run build && npx prisma db push --accept-data-loss && npx ts-node prisma/seed.ts
+    startCommand: node dist/src/main.js
     envVars:
-      - key: PRISMA_CLIENT_ENGINE_TYPE
-        value: library
       - key: DATABASE_URL
         value: file:./dev.db
       - key: ML_SERVICE_URL
