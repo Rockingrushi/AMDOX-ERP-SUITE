@@ -30,7 +30,7 @@ services:
           type: web
           property: host
       - key: NODE_VERSION
-        value: "20.12.2"
+        value: "22.12.0"
 
   # 3. Next.js Frontend
   - type: web
@@ -48,4 +48,4 @@ services:
           property: hostport
 
       - key: NODE_VERSION
-        value: "20.12.2"
+        value: "22.12.0"
