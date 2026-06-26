@@ -1,10 +1,14 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { PrismaLibSql } from '@prisma/adapter-libsql';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
   constructor() {
-    super();
+    const adapter = new PrismaLibSql({
+      url: process.env.DATABASE_URL || 'file:./dev.db',
+    });
+    super({ adapter });
   }
 
   async onModuleInit() {
@@ -15,4 +19,3 @@ export class PrismaService extends PrismaClient implements OnModuleInit, OnModul
     await this.$disconnect();
   }
 }
-
